@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { gql, useQuery } from "@apollo/client";
 
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
@@ -7,6 +8,16 @@ import Col from "react-bootstrap/Col";
 import CreateGameControl from "./CreateGameControl";
 import GameList from "./GameList";
 
+const GAMES_QUERY = gql`
+  query getGameList {
+    games {
+      id
+      title
+      size
+    }
+  }
+`;
+
 export type Game = {
   id: string;
   title: string | undefined;
@@ -14,25 +25,19 @@ export type Game = {
 };
 
 const Dashboard = () => {
-  const [games, setGames] = useState<Game[]>([
-    { id: "dummy-id", title: "name", size: 15 },
-    { id: "dummy-id-2", title: "name 2", size: 15 },
-  ]);
+  const { data, loading, error } = useQuery(GAMES_QUERY);
 
-  const addGame = useCallback(
-    (g: Game) => {
-      setGames([g, ...games]);
-    },
-    [games, setGames]
-  );
+  if (loading) return <p>loading</p>;
+  if (error) return <p>error</p>;
 
+  const { games } = data;
   return (
     <Container>
       <Col
         md={4}
         className="d-flex flex-column justify-content-flex-start mt-4"
       >
-        <CreateGameControl addGame={addGame} />
+        <CreateGameControl addGame={()=>{}} />
         <GameList games={games} />
       </Col>
     </Container>
