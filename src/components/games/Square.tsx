@@ -1,10 +1,4 @@
-import React, {
-  MouseEvent,
-  KeyboardEvent,
-  useState,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { MouseEvent, KeyboardEvent, useCallback } from "react";
 import { gql, useMutation } from "@apollo/client";
 import styled from "@emotion/styled";
 
@@ -16,9 +10,15 @@ import {
 
 const STANDARD_FONT_SIZE = 16;
 // Size in rem
-const SQUARE_SIZE = 3;
-const SELECTED_COLOR = "#D6EAF8";
-const BLACK = "_BLACK";
+const SQUARE_SIZE = 2;
+const MINI_SQUARE_SIZE = 2.4;
+
+const SELECTED_COLOR = "gold";
+const SECONDARY_SELECTED_COLOR = "lightblue";
+
+export const BLACK = "_BLACK";
+const BACKSPACE = "Backspace";
+const DELETE = "Delete";
 
 export const SQUARE_DETAIL = gql`
   fragment SquareDetail on Square {
@@ -46,27 +46,31 @@ interface BorderProps {
   left?: boolean;
   bottom?: boolean;
   right?: boolean;
-  active?: boolean;
+  secondary?: boolean;
   writeable?: boolean;
 }
 
 interface SizedSquareProps extends BorderProps {
+  active: boolean;
+  squareSize: number;
   adjustedFontSize: number;
 }
 
 const dynamicSquareProperties = ({
+  squareSize,
   adjustedFontSize,
   top,
   left,
   bottom,
   right,
   active,
+  secondary,
   writeable,
 }: SizedSquareProps) => {
   let style: Record<string, string> = {
     fontSize: `${adjustedFontSize}px`,
-    width: `${SQUARE_SIZE}rem`,
-    height: `${SQUARE_SIZE}rem`,
+    width: `${squareSize}rem`,
+    height: `${squareSize}rem`,
   };
   if (top) {
     style.borderTop = "solid 2px";
@@ -80,12 +84,14 @@ const dynamicSquareProperties = ({
   if (right) {
     style.borderRight = "solid 2px";
   }
-  if (active) {
-    style.backgroundColor = SELECTED_COLOR;
-  }
   if (!writeable) {
     style.backgroundColor = "black";
+  } else if (active) {
+    style.backgroundColor = SELECTED_COLOR;
+  } else if (secondary) {
+    style.backgroundColor = SECONDARY_SELECTED_COLOR;
   }
+
   return style;
 };
 
@@ -107,10 +113,12 @@ const SizedSquare = styled.div`
 
 interface Props extends BorderProps {
   gameId: string;
-  gameSize: number;
+  size: number;
   enforceSymmetry: boolean;
   square: SquareDetail;
   setSelectedIx: (index: number) => void;
+  toggleIsAcross: () => void;
+  selectedIx: number;
 }
 
 const calcFontSize = ({ length }: string) => {
@@ -125,12 +133,16 @@ const calcFontSize = ({ length }: string) => {
 
 export default function Square({
   gameId,
-  gameSize,
+  size,
   enforceSymmetry,
-  square: { index, char },
+  square: { id, index, char },
   setSelectedIx,
+  toggleIsAcross,
+  selectedIx,
   ...props
 }: Props) {
+  const gameSize = size * size;
+
   const [updateCharBase, { data }] = useMutation<
     UpdateSquare,
     UpdateSquareVariables
@@ -178,35 +190,54 @@ export default function Square({
           updateChar(BLACK);
         }
       } else {
-        setSelectedIx(index);
+        if (selectedIx === index) {
+          toggleIsAcross();
+        }
       }
     },
-    [char]
+    [char, updateChar, index, selectedIx, setSelectedIx, toggleIsAcross]
   );
 
-  function handleKeyPress(e: KeyboardEvent) {
-    updateCharBase({
-      variables: {
-        input: {
-          index,
-          gameId,
-          char: e.key.toUpperCase(),
+  function handleKeyUp({ key }: KeyboardEvent) {
+    const isAlpha = /^[a-z]$/i.test(key);
+    if (isAlpha) {
+      updateCharBase({
+        variables: {
+          input: {
+            index,
+            gameId,
+            char: key.toUpperCase(),
+          },
         },
-      },
-    });
+      });
+    } else if (key === BACKSPACE || key === DELETE) {
+      updateCharBase({
+        variables: {
+          input: {
+            index,
+            gameId,
+            char: null,
+          },
+        },
+      });
+    }
   }
 
   const writeable = char !== BLACK;
   const adjustedFontSize =
     char && char.length > 0 ? calcFontSize(char) : STANDARD_FONT_SIZE;
+  const squareSize = size > 10 ? SQUARE_SIZE : MINI_SQUARE_SIZE;
 
   return (
     <SizedSquare
-      adjustedFontSize={adjustedFontSize}
       {...props}
-      onClick={handleClick}
+      id={id}
+      active={index === selectedIx}
+      squareSize={squareSize}
+      adjustedFontSize={adjustedFontSize}
+      onMouseDown={handleClick}
       onFocus={() => setSelectedIx(index)}
-      onKeyPress={handleKeyPress}
+      onKeyUp={handleKeyUp}
       tabIndex={0}
       writeable={writeable}
     >
