@@ -2,13 +2,7 @@ import React, { useState } from "react";
 import Button from "react-bootstrap/Button";
 import CreateGameModal from "./CreateGameModal";
 
-import { Game } from "./Dashboard";
-
-interface Props {
-  addGame: (g: Game) => void;
-}
-
-export default function CreateGameControl({ addGame }: Props) {
+export default function CreateGameControl() {
   const [showModal, setShowModal] = useState(false);
   return (
     <>
@@ -18,7 +12,6 @@ export default function CreateGameControl({ addGame }: Props) {
       <CreateGameModal
         show={showModal}
         onHide={() => setShowModal(false)}
-        addGame={addGame}
       />
     </>
   );

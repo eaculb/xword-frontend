@@ -190,7 +190,7 @@ export default function Square({
         input: {
           index,
           gameId,
-          char: e.key,
+          char: e.key.toUpperCase(),
         },
       },
     });
