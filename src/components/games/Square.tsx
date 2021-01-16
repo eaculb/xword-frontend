@@ -13,8 +13,7 @@ const STANDARD_FONT_SIZE = 16;
 const SQUARE_SIZE = 2;
 const MINI_SQUARE_SIZE = 2.4;
 
-const SELECTED_COLOR = "gold";
-const SECONDARY_SELECTED_COLOR = "lightblue";
+const SECONDARY_COLOR = "lightblue";
 
 export const BLACK = "_BLACK";
 const BACKSPACE = "Backspace";
@@ -86,10 +85,12 @@ const dynamicSquareProperties = ({
   }
   if (!writeable) {
     style.backgroundColor = "black";
-  } else if (active) {
-    style.backgroundColor = SELECTED_COLOR;
+  }
+  if (active) {
+    style.zIndex = "1";
+    style.boxShadow = "0 0 5px 1px";
   } else if (secondary) {
-    style.backgroundColor = SECONDARY_SELECTED_COLOR;
+    style.backgroundColor = SECONDARY_COLOR;
   }
 
   return style;
@@ -143,10 +144,9 @@ export default function Square({
 }: Props) {
   const gameSize = size * size;
 
-  const [updateCharBase, { data }] = useMutation<
-    UpdateSquare,
-    UpdateSquareVariables
-  >(UPDATE_SQUARE);
+  const [updateCharBase] = useMutation<UpdateSquare, UpdateSquareVariables>(
+    UPDATE_SQUARE
+  );
 
   const updateChar = enforceSymmetry
     ? (char: string | null) => {
@@ -195,7 +195,7 @@ export default function Square({
         }
       }
     },
-    [char, updateChar, index, selectedIx, setSelectedIx, toggleIsAcross]
+    [char, updateChar, index, selectedIx, toggleIsAcross]
   );
 
   function handleKeyUp({ key }: KeyboardEvent) {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { gql } from "@apollo/client";
 
 import Square, { BLACK, SQUARE_DETAIL } from "./Square";
@@ -45,6 +45,9 @@ export default function Board({ game }: Props) {
   }
 
   const selectedWord = useMemo(() => {
+    if (sortedSquares[selectedIx].char === BLACK) {
+      return [selectedIx];
+    }
     let result: GetGameDetail_game_squares[] = [];
     let slice;
     let start;
@@ -69,7 +72,7 @@ export default function Board({ game }: Props) {
     }
     const word = result.map((square) => square.index);
     return word;
-  }, [selectedIx, selectedIsAcross]);
+  }, [selectedIx, selectedIsAcross, getCol, getRow, sortedSquares]);
 
   return (
     <div>

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React from "react";
 import { gql, useQuery } from "@apollo/client";
 
 import Container from "react-bootstrap/Container";
